@@ -24,6 +24,9 @@ open class Vector2D(open val x: Double, open val y: Double) {
     fun getRightNormal(): Vector2D {
         return Vector2D(y, -x)
     }
+    fun getLeftNormal(): Vector2D {
+        return Vector2D(-y, x)
+    }
     fun toApacheVec(): RealVector {
         return ArrayRealVector(doubleArrayOf(this.x, this.y))
     }
@@ -43,6 +46,9 @@ open class Vector2D(open val x: Double, open val y: Double) {
     fun angle(): Double {
         return atan2(y, x)
     }
+    fun zProd(other: Vector2D): Double {
+        return this.x * other.y - this.y * other.x
+    }
 
     operator fun minus(other: Vector2D): Vector2D {
         return Vector2D(this.x - other.x, this.y - other.y)
@@ -50,5 +56,17 @@ open class Vector2D(open val x: Double, open val y: Double) {
 
     operator fun plus(other: Vector2D): Vector2D {
         return Vector2D(this.x + other.x, this.y + other.y)
+    }
+    override fun equals(other: Any?): Boolean {
+        if (other is Vector2D) {
+            return other.x == x && other.y == y
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        var result = x.hashCode()
+        result = 31 * result + y.hashCode()
+        return result
     }
 }
