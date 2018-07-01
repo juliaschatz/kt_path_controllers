@@ -1,10 +1,9 @@
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
-import kotlin.math.PI
-import kotlin.math.absoluteValue
-import kotlin.math.acos
-import kotlin.math.pow
+import java.lang.IllegalArgumentException
+import kotlin.math.*
 
-private fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.BiarcPart> {
+fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.BiarcPart> {
     val v = p1 - p2
     val t1 = p1.directionVector()
     val t2 = p2.directionVector()
@@ -24,7 +23,7 @@ private fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.Bi
         val theta2 = if (v.zProd(t2) > 0) PI else -PI
         val start1 = (p1 - pm).angle()
         val end1 = start1 + theta1
-        val start2 = (pm - p2).angle()
+        val start2 = (p2 - c2).angle()
         val end2 = start2 + theta2
 
         return Pair(Biarc.ArcSegment(c1, r, start1, end1), Biarc.ArcSegment(c2, r, start2, end2))
@@ -34,11 +33,11 @@ private fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.Bi
     }
     val pm = (p1 + p2 + (t1 - t2).scalarMul(d2)).scalarMul(0.5)
 
-    fun calcHalfBiarc(t: Vector2D, p: Vector2D, beginAngle: Double): Biarc.BiarcPart {
+    fun calcHalfBiarc(t: Vector2D, p: Vector2D, direction: Double): Biarc.BiarcPart {
         val n = t.getLeftNormal()
         val pmp1 = pm - p
         if (pmp1.dot(n) == 0.0) {
-            return Biarc.LineSegment(p, pm)
+            return if (direction > 0) Biarc.LineSegment(p, pm) else Biarc.LineSegment(pm, p)
         }
         else {
             val s = (pmp1).dot(pmp1) / (n.scalarMul(2.0).dot(pmp1))
@@ -64,34 +63,135 @@ private fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.Bi
             else {
                 theta = 2*PI - acos(op.dot(om))
             }
-
-            return Biarc.ArcSegment(c, r, beginAngle, beginAngle + theta)
+            val beginAngle: Double
+            if (direction > 0) {
+                beginAngle = (p - c).angle()
+            }
+            else {
+                beginAngle = (pm - c).angle()
+            }
+            var endAngle = beginAngle + theta * direction
+            endAngle = toHeading(endAngle)
+            return Biarc.ArcSegment(c, r, beginAngle, endAngle)
         }
     }
 
-    return Pair(calcHalfBiarc(t1, p1, (p1 - pm).angle()), calcHalfBiarc(t2, p2, (pm - p2).angle()))
+    return Pair(calcHalfBiarc(t1, p1,1.0), calcHalfBiarc(t2, p2,-1.0))
 }
 
-class BiarcPath(waypoints: Array<Pose>) : Path() {
+class BiarcPath(val waypoints: Array<Pose>) : Path() {
+    val segments = arrayOfNulls<Biarc.BiarcPartWrapper>((waypoints.size-1) * 2)
+    val totalLen: Double
     init {
+        val segmentsUnWrapped = arrayOfNulls<Biarc.BiarcPart>((waypoints.size-1)*2)
         for (i in 0..waypoints.size-2) {
             val wp1 = waypoints.get(i)
             val wp2 = waypoints.get(i+1)
+            val (part1, part2) = biarcInterpolate(wp1, wp2)
+            segmentsUnWrapped.set(2*i, part1)
+            segmentsUnWrapped.set(2*i+1, part2)
+        }
+        totalLen = segmentsUnWrapped.sumByDouble { it!!.length() }
+        var lastEnd = 0.0
+        segmentsUnWrapped.forEachIndexed { i, biarcPart ->
+            val begin = lastEnd
+            val normalizedLen = biarcPart!!.length() / totalLen
+            val end = begin + normalizedLen
+            segments.set(i, Biarc.BiarcPartWrapper(biarcPart, begin, end))
+            lastEnd = end
         }
     }
-    override fun error(r: Vector2D): Double {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
+    private fun getSegment(t: Double): Biarc.BiarcPartWrapper {
+        for (segment in segments) {
+            if (segment == null) {
+                continue
+            }
+            if (t in segment.begin..segment.end) {
+                return segment
+            }
+        }
+        throw IllegalArgumentException("t outside domain")
     }
 
-    override fun errorGradient(r: Vector2D): Vector2D {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun closestTOnPathTo(r: Vector2D): Double {
+        var minDist = Double.MAX_VALUE
+        var minT: Double? = null
+        segments.forEach {
+            try {
+                val testT = it!!.project(r)
+                val testPt = it.r(testT)
+                val testDist = testPt.sqDist(r)
+                if (testDist < minDist) {
+                    minDist = testDist
+                    minT = testT
+                }
+            }
+            catch (e: IllegalArgumentException) {
+                // Do nothing, point outside projection domain
+            }
+        }
+        if (minT == null) {
+            throw IllegalArgumentException("Point outside projection domain")
+        }
+        return minT as Double
     }
 
-    override fun hessian(r: Vector2D): RealMatrix {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun calculatePoint(t: Double): Vector2D {
+        return getSegment(t).r(t)
     }
 
-    override fun n_vec(r: Vector2D): Vector2D {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun tangentVec(t: Double): Vector2D {
+        return getSegment(t).tangentVec(t)
+    }
+
+    override fun error(r: Vector2D, closestT: Double): Double {
+        // Phi
+        val pathPt = calculatePoint(closestT)
+        val pathTangentVec = tangentVec(closestT)
+        val ptPathVec = r - pathPt
+        val sgn = sign(pathTangentVec.zProd(ptPathVec))
+        return sgn * r.sqDist(pathPt)
+    }
+
+    override fun errorGradient(r: Vector2D, closestT: Double): Vector2D {
+        return n_vec(r, closestT)
+    }
+
+    override fun hessian(r: Vector2D, closestT: Double): RealMatrix {
+        // Discretely calculate the hessian because lol
+        val d = 0.001
+        val x1 = this.error(r - Vector2D(d, 0.0), closestT)
+        val x2 = this.error(r, closestT)
+        val x3 = this.error(r + Vector2D(d, 0.0), closestT)
+
+        val dx1 = (x2 - x1) / d
+        val dx2 = (x3 - x2) / d
+
+        val ddx = (dx2 - dx1) / d
+
+        val y1 = this.error(r - Vector2D(0.0, d), closestT)
+        val y2 = x2
+        val y3 = this.error(r + Vector2D(0.0, d), closestT)
+
+        val dy1 = (y2 - y1) / d
+        val dy2 = (y3 - y2) / d
+
+        val ddy = (dy2 - dy1) / d
+
+        val xy1 = this.error(r + Vector2D(-d/2, -d/2), closestT)
+        val xy2 = this.error(r + Vector2D(d/2, -d/2), closestT)
+        val xy3 = this.error(r + Vector2D(-d/2, d/2), closestT)
+        val xy4 = this.error(r + Vector2D(d/2, d/2), closestT)
+
+        val dydx = ((xy4 - xy3) / d - (xy2 - xy1) / d) / d
+
+        return Array2DRowRealMatrix(arrayOf(doubleArrayOf(ddx, dydx), doubleArrayOf(dydx, ddy)))
+    }
+
+    override fun n_vec(r: Vector2D, closestT: Double): Vector2D {
+        val pathPt = calculatePoint(closestT)
+        val ptPathVec = r - pathPt
+        return ptPathVec.normalized()
     }
 }

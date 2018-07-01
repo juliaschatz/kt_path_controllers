@@ -1,11 +1,17 @@
 import org.apache.commons.math3.linear.*
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.sin
 
 open class Vector2D(open val x: Double, open val y: Double) {
     companion object {
         fun fromApacheVec(v: RealVector): Vector2D {
             return Vector2D(v.getEntry(0), v.getEntry(1))
+        }
+
+        fun fromAngle(angle: Double): Vector2D {
+            return Vector2D(cos(angle), sin(angle))
         }
     }
     fun dot(other: Vector2D): Double {
@@ -68,5 +74,16 @@ open class Vector2D(open val x: Double, open val y: Double) {
         var result = x.hashCode()
         result = 31 * result + y.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "Vector2D($x, $y)"
+    }
+
+    fun sqDist(other: Vector2D): Double {
+        return (other.x - x).pow(2) + (other.y - y).pow(2)
+    }
+    fun dist(other: Vector2D): Double {
+        return sqDist(other).pow(0.5)
     }
 }
