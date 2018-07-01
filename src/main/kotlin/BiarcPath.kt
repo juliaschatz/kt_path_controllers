@@ -1,5 +1,3 @@
-import org.apache.commons.math3.linear.Array2DRowRealMatrix
-import org.apache.commons.math3.linear.RealMatrix
 import java.lang.IllegalArgumentException
 import kotlin.math.*
 
@@ -149,16 +147,16 @@ class BiarcPath(val waypoints: Array<Pose>) : Path() {
         // Phi
         val pathPt = calculatePoint(closestT)
         val pathTangentVec = tangentVec(closestT)
-        val ptPathVec = r - pathPt
+        val ptPathVec = (r - pathPt).normalized().neg()
         val sgn = sign(pathTangentVec.zProd(ptPathVec))
-        return sgn * r.sqDist(pathPt)
+        return sgn * r.dist(pathPt)
     }
 
     override fun errorGradient(r: Vector2D, closestT: Double): Vector2D {
-        return n_vec(r, closestT)
+        return nVec(r, closestT)
     }
 
-    override fun n_vec(r: Vector2D, closestT: Double): Vector2D {
+    override fun nVec(r: Vector2D, closestT: Double): Vector2D {
         val pathPt = calculatePoint(closestT)
         val ptPathVec = r - pathPt
         return ptPathVec.normalized()

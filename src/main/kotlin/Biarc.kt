@@ -65,7 +65,8 @@ class Biarc {
 
         override fun tangentVec(t: Double): Vector2D {
             val ang = angleFromT(t)
-            return Vector2D(-sin(ang), cos(ang))
+            val dir = if (startAngle < endAngle) 1.0 else -1.0
+            return Vector2D(-sin(ang), cos(ang)).scalarMul(dir)
         }
         operator fun contains(angle: Double): Boolean {
             return invertAngle(angle) in 0.0..1.0

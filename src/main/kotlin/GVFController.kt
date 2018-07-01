@@ -1,9 +1,10 @@
+import kotlin.math.absoluteValue
 import kotlin.math.acos
 import kotlin.math.pow
 
 class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
     fun vectorAt(r: Vector2D, closestT: Double): Vector2D {
-        return path.t_vec(r, closestT).minus(path.n_vec(r, closestT).scalarMul(k_n * path.error(r, closestT)))
+        return path.tangentVec(closestT).minus(path.nVec(r, closestT).scalarMul(k_n * path.error(r, closestT).absoluteValue))
     }
     fun desiredHeadingVecDeriv(r: Vector2D, speed: Double, vector: Vector2D, curHeading: Vector2D, closestT: Double): Vector2D {
         val error = path.error(r, closestT)
@@ -11,7 +12,7 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
 
         val vecDerivA = MATRIX_E.subtract(MATRIX_I2.scalarMultiply(error * k_n)).multiply(path.hessian(r, closestT)).operate(curHeading.toApacheVec())
         var vecDeriv = Vector2D.fromApacheVec(vecDerivA).scalarMul(speed)
-        vecDeriv = vecDeriv.minus(path.n_vec(r, closestT).scalarMul(errDeriv * k_n))
+        vecDeriv = vecDeriv.minus(path.nVec(r, closestT).scalarMul(errDeriv * k_n))
 
         val desHeadingVecDeriv = MATRIX_I2.scalarMultiply(1 / vector.norm()).subtract(vector.outerProduct().scalarMultiply(vector.norm().pow(3))).operate(vecDeriv.toApacheVec())
 
@@ -29,5 +30,11 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
         val angleDelta = acos(desiredHeadingVec.dot(curHeading))
 
         return desiredCurvature(r, speed, curHeading, vector, desiredHeadingVec, closestT) - k_delta * angleDelta
+    }
+    fun vectorControl(r: Vector2D): Vector2D {
+        val closestT = path.closestTOnPathTo(r)
+        val vector = vectorAt(r, closestT)
+        val desiredHeadingVec = vector.normalized()
+        return desiredHeadingVec
     }
 }

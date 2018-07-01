@@ -86,4 +86,8 @@ open class Vector2D(open val x: Double, open val y: Double) {
     fun dist(other: Vector2D): Double {
         return sqDist(other).pow(0.5)
     }
+
+    fun neg(): Vector2D {
+        return this.scalarMul(-1.0)
+    }
 }

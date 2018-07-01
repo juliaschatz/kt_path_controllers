@@ -1,4 +1,3 @@
-import org.apache.commons.math3.linear.RealMatrix
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.pow
@@ -26,11 +25,15 @@ class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double):
     }
 
     override fun errorGradient(r: Vector2D, closestT: Double): Vector2D {
-        return n_vec(r, closestT)
+        return nVec(r, closestT)
     }
 
-    override fun n_vec(r: Vector2D, closestT: Double): Vector2D {
-        return (r - Vector2D(x0, y0)).normalized()
+    override fun nVec(r: Vector2D, closestT: Double): Vector2D {
+        var vec = (r - Vector2D(x0, y0)).normalized()
+        if (error(r, 0.0) < 0) {
+            vec = vec.neg()
+        }
+        return vec
     }
 
 }

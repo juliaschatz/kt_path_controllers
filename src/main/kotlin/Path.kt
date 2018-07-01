@@ -40,9 +40,5 @@ abstract class Path {
                 doubleArrayOf(dydx, ddy)))
 
     }
-    abstract fun n_vec(r: Vector2D, closestT: Double): Vector2D
-    fun t_vec(r: Vector2D, closestT: Double): Vector2D {
-        val n = this.n_vec(r, closestT)
-        return n.getRightNormal()
-    }
+    abstract fun nVec(r: Vector2D, closestT: Double): Vector2D
 }
