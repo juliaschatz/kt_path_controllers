@@ -14,7 +14,7 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
         var vecDeriv = Vector2D.fromApacheVec(vecDerivA).scalarMul(speed)
         vecDeriv = vecDeriv.minus(path.nVec(r, closestT).scalarMul(errDeriv * k_n))
 
-        val desHeadingVecDeriv = MATRIX_I2.scalarMultiply(1 / vector.norm()).subtract(vector.outerProduct().scalarMultiply(vector.norm().pow(3))).operate(vecDeriv.toApacheVec())
+        val desHeadingVecDeriv = MATRIX_I2.scalarMultiply(1.0 / vector.norm()).subtract(vector.outerProduct().scalarMultiply(1.0 / vector.norm().pow(3))).operate(vecDeriv.toApacheVec())
 
         return Vector2D.fromApacheVec(desHeadingVecDeriv)
     }

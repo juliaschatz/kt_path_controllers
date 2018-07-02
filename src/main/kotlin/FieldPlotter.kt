@@ -12,8 +12,8 @@ fun main(args: Array<String>) {
     val pts = arrayOf(Pose(0.0, 0.0, 0.0), Pose(10.0, 10.0, 0.0))
     println(biarcInterpolate(pts[0], pts[1]))
     val path: Path
-    val ellipse = false
-    val curvatureControl = false
+    val ellipse = true
+    val curvatureControl = true
     if (ellipse) {
         path = EllipsePath(0.0, 0.0, 5.0, 5.0)
     }
@@ -21,7 +21,7 @@ fun main(args: Array<String>) {
         path = BiarcPath(pts)
     }
     println(path.tangentVec(0.5))
-    val controller = GVFController(path, 10.0, 2.0)
+    val controller = GVFController(path, 1.55, 0.5)
     val xPath = DoubleArray(201)
     val yPath = DoubleArray(201)
     val err = DoubleArray(1000)
@@ -36,9 +36,9 @@ fun main(args: Array<String>) {
     val xRobot = DoubleArray(1000)
     val yRobot = DoubleArray(1000)
     xRobot[0] = 0.0
-    yRobot[0] = 2.0
-    var heading = Vector2D.fromAngle(5 * PI / 4)
-    val speed = 20.0 / 1000
+    yRobot[0] = -4.0
+    var heading = Vector2D.fromAngle(0.0)
+    val speed = 40.0 / 1000
     for (t in 1..999) {
         var position = Vector2D(xRobot[t-1], yRobot[t-1])
         var curvature: Double
@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
         }
         else {
             val radiusRatio = {R: Double, D: Double -> (R - D/2) / (R + D/2)}
-            val radius = -1.0 / curvature
+            val radius = 1.0 / curvature
             var leftSpeed: Double
             var rightSpeed: Double
             if (radius > 0) {

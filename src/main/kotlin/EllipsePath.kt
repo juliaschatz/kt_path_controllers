@@ -25,7 +25,7 @@ class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double):
     }
 
     override fun errorGradient(r: Vector2D, closestT: Double): Vector2D {
-        return nVec(r, closestT)
+        return nVec(r, closestT).scalarMul(this.error(r, closestT))
     }
 
     override fun nVec(r: Vector2D, closestT: Double): Vector2D {
