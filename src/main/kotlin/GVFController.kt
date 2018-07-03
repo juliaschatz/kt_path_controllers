@@ -1,13 +1,11 @@
-import kotlin.math.absoluteValue
-import kotlin.math.acos
 import kotlin.math.pow
 
 class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
     fun vectorAt(r: Vector2D, closestT: Double): Vector2D {
-        return path.tangentVec(closestT).minus(path.nVec(r, closestT).scalarMul(k_n * path.error(r, closestT).absoluteValue))
+        return path.tangentVec(closestT).minus(path.nVec(r, closestT).scalarMul(k_n * path.error(path.levelSet(r, closestT))))
     }
     fun desiredHeadingVecDeriv(r: Vector2D, speed: Double, vector: Vector2D, curHeading: Vector2D, closestT: Double): Vector2D {
-        val error = path.error(r, closestT)
+        val error = path.error(path.levelSet(r, closestT))
         val errDeriv = path.errorGradient(r, closestT).dot(curHeading) * speed
 
         val vecDerivA = MATRIX_E.subtract(MATRIX_I2.scalarMultiply(error * k_n)).multiply(path.hessian(r, closestT)).operate(curHeading.toApacheVec())
@@ -27,7 +25,8 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
         val curHeading = curHeading_.normalized()
         val vector = vectorAt(r, closestT)
         val desiredHeadingVec = vector.normalized()
-        val angleDelta = acos(desiredHeadingVec.dot(curHeading))
+        val angleDelta = toHeading(desiredHeadingVec.angle() - curHeading.angle())
+        println(angleDelta)
 
         return desiredCurvature(r, speed, curHeading, vector, desiredHeadingVec, closestT) - k_delta * angleDelta
     }

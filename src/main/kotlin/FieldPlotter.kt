@@ -1,10 +1,10 @@
 
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.QuickChart
-import org.knowm.xchart.style.markers.Marker
 import org.knowm.xchart.style.markers.None
 import java.awt.Color
 import kotlin.math.PI
+import kotlin.math.acos
 
 
 fun main(args: Array<String>) {
@@ -21,11 +21,15 @@ fun main(args: Array<String>) {
         path = BiarcPath(pts)
     }
     println(path.tangentVec(0.5))
-    val controller = GVFController(path, 1.55, 0.5)
+    val hVec = Vector2D(5.0, 5.0)
+    println(path.hessian(hVec, path.closestTOnPathTo(hVec)))
+    val controller = GVFController(path, 1.0, 1.0)
     val xPath = DoubleArray(201)
     val yPath = DoubleArray(201)
     val err = DoubleArray(1000)
     val ts = DoubleArray(1000)
+    val desAngDiff = DoubleArray(1000)
+    val actualCurv = DoubleArray(1000)
 
     for (i in 0..200) {
         val t = i / 200.0
@@ -35,9 +39,9 @@ fun main(args: Array<String>) {
     }
     val xRobot = DoubleArray(1000)
     val yRobot = DoubleArray(1000)
-    xRobot[0] = 0.0
-    yRobot[0] = -4.0
-    var heading = Vector2D.fromAngle(0.0)
+    xRobot[0] = 5.0
+    yRobot[0] = 0.0
+    var heading = Vector2D.fromAngle(PI / 2)
     val speed = 40.0 / 1000
     for (t in 1..999) {
         var position = Vector2D(xRobot[t-1], yRobot[t-1])
@@ -45,19 +49,21 @@ fun main(args: Array<String>) {
         try {
             if (curvatureControl) {
                 curvature = controller.curvatureControl(position, speed, heading)
+                actualCurv[t] = curvature
+                desAngDiff[t] = acos(heading.dot(controller.vectorControl(position).normalized()))
             }
             else {
                 heading = controller.vectorControl(position)
                 curvature = 0.0
             }
 
-            err[t-1] = controller.path.error(position, controller.path.closestTOnPathTo(position))
+            err[t-1] = controller.path.levelSet(position, controller.path.closestTOnPathTo(position))
             ts[t-1] = t.toDouble()
         }
         catch (e: IllegalArgumentException) {
-            position += heading.scalarMul(speed)
-            xRobot[t] = position.x
-            yRobot[t] = position.y
+            //position += heading.scalarMul(speed)
+            xRobot[t] = xRobot[t-1]
+            yRobot[t] = yRobot[t-1]
             continue
         }
         position += heading.scalarMul(speed)
@@ -65,7 +71,7 @@ fun main(args: Array<String>) {
 
         }
         else {
-            val radiusRatio = {R: Double, D: Double -> (R - D/2) / (R + D/2)}
+            val radiusRatio: (Double, Double) -> Double = {R: Double, D: Double -> (R - D/2.0) / (R + D/2.0)}
             val radius = 1.0 / curvature
             var leftSpeed: Double
             var rightSpeed: Double
@@ -94,6 +100,8 @@ fun main(args: Array<String>) {
     SwingWrapper(chart).displayChart()
 
     SwingWrapper(QuickChart.getChart("Error", "T", "Error", "Error", ts, err)).displayChart()
+    SwingWrapper(QuickChart.getChart("Curvature", "T", "Curvature", "Curvature", ts, actualCurv)).displayChart()
+    SwingWrapper(QuickChart.getChart("Desired Angle Difference", "T", "Angle to Desired", "Angle", ts, desAngDiff)).displayChart()
 
 
 

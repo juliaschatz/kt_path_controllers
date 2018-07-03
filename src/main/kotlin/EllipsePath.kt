@@ -1,7 +1,6 @@
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.RealMatrix
+import kotlin.math.*
 
 class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double): Path() {
     override fun closestTOnPathTo(r: Vector2D): Double {
@@ -18,22 +17,30 @@ class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double):
         return Vector2D(-a * sin(ang), b * cos(ang)).normalized()
     }
 
-    override fun error(r: Vector2D, closestT: Double): Double {
+    override fun levelSet(r: Vector2D, closestT: Double): Double {
         val x = r.x
         val y = r.y
         return (x - x0).pow(2) / a.pow(2) + (y - y0).pow(2) / b.pow(2) - 1
     }
 
     override fun errorGradient(r: Vector2D, closestT: Double): Vector2D {
-        return nVec(r, closestT).scalarMul(this.error(r, closestT))
+        return nVec(r, closestT).scalarMul(this.errorDeriv(this.levelSet(r, closestT)))
+    }
+
+    override fun error(s: Double): Double {
+        return atan(s)
+    }
+
+    override fun errorDeriv(s: Double): Double {
+        return 1.0 / (s.pow(2) + 1.0)
+    }
+
+    override fun hessian(r: Vector2D, closestT: Double): RealMatrix {
+        return Array2DRowRealMatrix(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(0.0, 2.0)))
     }
 
     override fun nVec(r: Vector2D, closestT: Double): Vector2D {
-        var vec = (r - Vector2D(x0, y0)).normalized()
-        if (error(r, 0.0) < 0) {
-            vec = vec.neg()
-        }
-        return vec
+        return tangentVec(closestT).getRightNormal()
     }
 
 }

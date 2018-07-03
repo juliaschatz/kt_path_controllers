@@ -143,7 +143,7 @@ class BiarcPath(val waypoints: Array<Pose>) : Path() {
         return getSegment(t).tangentVec(t)
     }
 
-    override fun error(r: Vector2D, closestT: Double): Double {
+    override fun levelSet(r: Vector2D, closestT: Double): Double {
         // Phi
         val pathPt = calculatePoint(closestT)
         val pathTangentVec = tangentVec(closestT)
@@ -157,8 +157,6 @@ class BiarcPath(val waypoints: Array<Pose>) : Path() {
     }
 
     override fun nVec(r: Vector2D, closestT: Double): Vector2D {
-        val pathPt = calculatePoint(closestT)
-        val ptPathVec = r - pathPt
-        return ptPathVec.normalized()
+        return tangentVec(closestT).getRightNormal()
     }
 }
