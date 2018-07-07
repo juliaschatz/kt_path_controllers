@@ -20,13 +20,12 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
 
         return -1.0 * this.desiredHeadingVecDeriv(r, speed, vector, curHeading, closestT).dot(desiredHeadingVec.getRightNormal())
     }
-    fun curvatureControl(r: Vector2D, speed: Double, curHeading_: Vector2D): Double {
+    fun curvatureControl(r: Vector2D, speed: Double, curHeading_: Vector2D, dt: Double): Double {
         val closestT = path.closestTOnPathTo(r)
         val curHeading = curHeading_.normalized()
         val vector = vectorAt(r, closestT)
         val desiredHeadingVec = vector.normalized()
         val angleDelta = toHeading(desiredHeadingVec.angle() - curHeading.angle())
-        println(angleDelta)
 
         return desiredCurvature(r, speed, curHeading, vector, desiredHeadingVec, closestT) - k_delta * angleDelta
     }

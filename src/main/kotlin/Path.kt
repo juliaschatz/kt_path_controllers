@@ -1,5 +1,7 @@
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
+import java.lang.Math.atan
+import kotlin.math.pow
 
 abstract class Path {
     abstract fun closestTOnPathTo(r: Vector2D): Double
@@ -8,10 +10,10 @@ abstract class Path {
     abstract fun levelSet(r: Vector2D, closestT: Double): Double
     abstract fun errorGradient(r: Vector2D, closestT: Double): Vector2D
     open fun error(s: Double): Double {
-        return s
+        return atan(s)
     }
     open fun errorDeriv(s: Double): Double {
-        return 1.0
+        return 1.0 / (1.0 + s.pow(2))
     }
     open fun hessian(r: Vector2D, closestT: Double): RealMatrix {
         // Discretely calculate the hessian because lol

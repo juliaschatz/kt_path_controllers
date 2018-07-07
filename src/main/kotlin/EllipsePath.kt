@@ -28,11 +28,11 @@ class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double):
     }
 
     override fun error(s: Double): Double {
-        return atan(s)
+        return s
     }
 
     override fun errorDeriv(s: Double): Double {
-        return 1.0 / (s.pow(2) + 1.0)
+        return 1.0
     }
 
     override fun hessian(r: Vector2D, closestT: Double): RealMatrix {

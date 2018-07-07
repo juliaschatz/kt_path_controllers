@@ -77,7 +77,7 @@ fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.BiarcPart>
     return Pair(calcHalfBiarc(t1, p1,1.0), calcHalfBiarc(t2, p2,-1.0))
 }
 
-class BiarcPath(val waypoints: Array<Pose>) : Path() {
+class BiarcPath(waypoints: Array<Pose>) : Path() {
     val segments = arrayOfNulls<Biarc.BiarcPartWrapper>((waypoints.size-1) * 2)
     val totalLen: Double
     init {
