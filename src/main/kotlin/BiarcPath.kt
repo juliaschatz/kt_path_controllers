@@ -112,7 +112,7 @@ class BiarcPath(waypoints: Array<Pose>) : Path() {
         throw IllegalArgumentException("t outside domain")
     }
 
-    override fun closestTOnPathTo(r: Vector2D): Double {
+    override fun closestTOnPathTo(r: Vector2D, guess: Double): Double {
         var minDist = Double.MAX_VALUE
         var minT: Double? = null
         segments.forEach {

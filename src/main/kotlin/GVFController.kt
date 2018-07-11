@@ -1,6 +1,7 @@
 import kotlin.math.pow
 
 class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
+    var lastT = 0.0001
     fun vectorAt(r: Vector2D, closestT: Double): Vector2D {
         return path.tangentVec(closestT).minus(path.nVec(r, closestT).scalarMul(k_n * path.error(path.levelSet(r, closestT))))
     }
@@ -21,16 +22,18 @@ class GVFController(val path: Path, val k_delta: Double, val k_n: Double) {
         return -1.0 * this.desiredHeadingVecDeriv(r, speed, vector, curHeading, closestT).dot(desiredHeadingVec.getRightNormal())
     }
     fun curvatureControl(r: Vector2D, speed: Double, curHeading_: Vector2D, dt: Double): Double {
-        val closestT = path.closestTOnPathTo(r)
+        val closestT = path.closestTOnPathTo(r, lastT)
         val curHeading = curHeading_.normalized()
         val vector = vectorAt(r, closestT)
         val desiredHeadingVec = vector.normalized()
         val angleDelta = toHeading(desiredHeadingVec.angle() - curHeading.angle())
+        lastT = closestT
 
         return desiredCurvature(r, speed, curHeading, vector, desiredHeadingVec, closestT) - k_delta * angleDelta
     }
     fun vectorControl(r: Vector2D): Vector2D {
-        val closestT = path.closestTOnPathTo(r)
+        val closestT = path.closestTOnPathTo(r, lastT)
+        lastT = closestT
         val vector = vectorAt(r, closestT)
         val desiredHeadingVec = vector.normalized()
         return desiredHeadingVec

@@ -5,8 +5,10 @@ import java.awt.Color
 import kotlin.math.PI
 
 fun main(args: Array<String>) {
-    val path = BiarcPath(arrayOf(Pose(0.0, 0.0, 0.0), Pose(10.0, 10.0, 0.0)))
-    val controller = GVFController(path, 10.0, 1.0)
+    val path = Spline(arrayOf(Pose(0.0, 0.0, 0.0), Pose(3.0, 3.0, 0.0)))
+    println(path.length)
+    //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
+    val controller = GVFController(path, 100.0, 1.0)
     val dt = 10.0 / 1000.0
     val speed = 1.0
 
@@ -16,7 +18,7 @@ fun main(args: Array<String>) {
     val errs = ArrayList<Double>()
 
     var time = 0.0
-    var position = Vector2D(0.0, 3.0)
+    var position = Vector2D(0.0, 0.0)
     var heading = Vector2D.fromAngle(0 * PI / 2)
 
     while (true) {
@@ -55,10 +57,16 @@ fun main(args: Array<String>) {
 
         position += heading.scalarMul(speed * dt)
 
+
+        try {
+            errs.add(path.error(path.levelSet(position, path.closestTOnPathTo(position, 0.0))))
+        }
+        catch (e: IllegalArgumentException) {
+            break
+        }
         xRobot.add(position.x)
         yRobot.add(position.y)
         times.add(time)
-        errs.add(path.error(path.levelSet(position, path.closestTOnPathTo(position))))
         time += dt
     }
 
@@ -70,6 +78,7 @@ fun main(args: Array<String>) {
         xPath.set(i, xy.x)
         yPath.set(i, xy.y)
     }
+    println("${xRobot.size} ${yRobot.size}")
 
     val chart = QuickChart.getChart("Path", "X", "Y", "Path", xPath, yPath)
     val robotSeries = chart.addSeries("Robot Position",  xRobot, yRobot)

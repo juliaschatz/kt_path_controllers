@@ -1,8 +1,5 @@
 import org.apache.commons.math3.linear.*
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
+import kotlin.math.*
 
 open class Vector2D(open val x: Double, open val y: Double) {
     companion object {
@@ -12,6 +9,15 @@ open class Vector2D(open val x: Double, open val y: Double) {
 
         fun fromAngle(angle: Double): Vector2D {
             return Vector2D(cos(angle), sin(angle))
+        }
+
+        fun arePointsCollinear(r1: Vector2D, r2: Vector2D, r3: Vector2D): Boolean {
+            val denomMat = Array2DRowRealMatrix(arrayOf(
+                    doubleArrayOf(r1.x, r1.y, 1.0),
+                    doubleArrayOf(r2.x, r2.y, 1.0),
+                    doubleArrayOf(r3.x, r3.y, 1.0)
+            ))
+            return LUDecomposition(denomMat).determinant == 0.0
         }
     }
     fun dot(other: Vector2D): Double {
@@ -35,13 +41,6 @@ open class Vector2D(open val x: Double, open val y: Double) {
     }
     fun toApacheVec(): RealVector {
         return ArrayRealVector(doubleArrayOf(this.x, this.y))
-    }
-    fun postMul(mat: RealMatrix): Vector2D {
-        if (mat.isSquare && mat.rowDimension == 2) {
-            val apache = mat.operate(this.toApacheVec())
-            return Vector2D(apache.getEntry(0), apache.getEntry(1))
-        }
-        throw MatrixDimensionMismatchException(mat.rowDimension, mat.columnDimension, 2, 2)
     }
     fun outerProduct(): RealMatrix {
         return Array2DRowRealMatrix(arrayOf(doubleArrayOf(x * x, x * y), doubleArrayOf(x * y, y * y)))
@@ -89,5 +88,9 @@ open class Vector2D(open val x: Double, open val y: Double) {
 
     fun neg(): Vector2D {
         return this.scalarMul(-1.0)
+    }
+
+    fun divide(other: Vector2D): Double {
+        return norm() / other.norm()
     }
 }

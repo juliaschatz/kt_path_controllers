@@ -4,16 +4,16 @@ import java.lang.Math.atan
 import kotlin.math.pow
 
 abstract class Path {
-    abstract fun closestTOnPathTo(r: Vector2D): Double
+    abstract fun closestTOnPathTo(r: Vector2D, guess: Double): Double
     abstract fun calculatePoint(t: Double): Vector2D
     abstract fun tangentVec(t: Double): Vector2D
     abstract fun levelSet(r: Vector2D, closestT: Double): Double
     abstract fun errorGradient(r: Vector2D, closestT: Double): Vector2D
     open fun error(s: Double): Double {
-        return atan(s)
+        return s
     }
     open fun errorDeriv(s: Double): Double {
-        return 1.0 / (1.0 + s.pow(2))
+        return 1.0
     }
     open fun hessian(r: Vector2D, closestT: Double): RealMatrix {
         // Discretely calculate the hessian because lol

@@ -1,3 +1,5 @@
+import org.apache.commons.math3.linear.Array2DRowRealMatrix
+import org.apache.commons.math3.linear.LUDecomposition
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 import kotlin.math.cos
@@ -30,6 +32,35 @@ class Biarc {
         }
     }
     class ArcSegment(val center: Vector2D, val radius: Double, val startAngle: Double, val endAngle: Double): BiarcPart() {
+        companion object {
+            fun fromThreePoints(ptBegin: Vector2D, ptMid: Vector2D, ptEnd: Vector2D): ArcSegment {
+                val hNum = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.sqNorm(), ptBegin.y, 1.0),
+                        doubleArrayOf(ptMid.sqNorm(),   ptMid.y,   1.0),
+                        doubleArrayOf(ptEnd.sqNorm(),   ptEnd.y,   1.0)))
+                val denomMat = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.x, ptBegin.y, 1.0),
+                        doubleArrayOf(ptMid.x,   ptMid.y,   1.0),
+                        doubleArrayOf(ptEnd.x,   ptEnd.y,   1.0)
+                ))
+                val denom = (2 * LUDecomposition(denomMat).determinant)
+                val h = LUDecomposition(hNum).determinant / denom
+
+                val kNum = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.x, ptBegin.sqNorm(), 1.0),
+                        doubleArrayOf(ptMid.x,   ptMid.sqNorm(),   1.0),
+                        doubleArrayOf(ptEnd.x,   ptEnd.sqNorm(),   1.0)
+                ))
+                val k = LUDecomposition(kNum).determinant / denom
+
+                val center_ = Vector2D(h, k)
+                val radius_ = center_.dist(ptBegin)
+                val beginAngle_ = (ptBegin - center_).angle()
+                val endAngle_ = (ptEnd - center_).angle()
+                return ArcSegment(center_, radius_, beginAngle_, endAngle_)
+            }
+        }
+
         fun angleFromT(t: Double): Double {
             return lerp(startAngle, endAngle, t)
         }
@@ -73,7 +104,7 @@ class Biarc {
         }
     }
 
-    class BiarcPartWrapper(val wrapped: BiarcPart, val begin: Double, val end: Double) {
+    class BiarcPartWrapper(val wrapped: BiarcPart, var begin: Double, var end: Double) {
         fun length(): Double {
             return wrapped.length()
         }

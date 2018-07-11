@@ -3,7 +3,7 @@ import org.apache.commons.math3.linear.RealMatrix
 import kotlin.math.*
 
 class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double): Path() {
-    override fun closestTOnPathTo(r: Vector2D): Double {
+    override fun closestTOnPathTo(r: Vector2D, guess: Double): Double {
         return (r - Vector2D(x0, y0)).angle() / (2 * PI)
     }
 
