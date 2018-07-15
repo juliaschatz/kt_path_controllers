@@ -11,8 +11,13 @@ class Biarc {
         abstract fun length(): Double
         abstract fun project(p: Vector2D): Double
         abstract fun tangentVec(t: Double): Vector2D
+        abstract fun curvature(toWrappedSpace: Double): Double
     }
     class LineSegment(val begin: Vector2D, val end: Vector2D): BiarcPart() {
+        override fun curvature(toWrappedSpace: Double): Double {
+            return 0.0
+        }
+
         private val line = end.minus(begin)
         override fun r(t: Double): Vector2D {
             return begin + line.scalarMul(t)
@@ -32,6 +37,10 @@ class Biarc {
         }
     }
     class ArcSegment(val center: Vector2D, val radius: Double, val startAngle: Double, val endAngle: Double): BiarcPart() {
+        override fun curvature(toWrappedSpace: Double): Double {
+            return 1.0 / radius
+        }
+
         companion object {
             fun fromThreePoints(ptBegin: Vector2D, ptMid: Vector2D, ptEnd: Vector2D): ArcSegment {
                 val hNum = Array2DRowRealMatrix(arrayOf(
@@ -122,6 +131,13 @@ class Biarc {
         }
         fun tangentVec(t: Double): Vector2D {
             return wrapped.tangentVec(toWrappedSpace(t))
+        }
+        operator fun contains(t: Double): Boolean {
+            return t in begin..end
+        }
+
+        fun curvature(t: Double): Double {
+            return wrapped.curvature(toWrappedSpace(t))
         }
     }
 }

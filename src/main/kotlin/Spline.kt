@@ -1,6 +1,7 @@
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.LUDecomposition
+import org.apache.commons.math3.linear.RealMatrix
 import org.apache.commons.math3.optim.univariate.BrentOptimizer
 import org.apache.commons.math3.optim.univariate.UnivariateOptimizer
 import java.lang.IllegalArgumentException
@@ -70,6 +71,10 @@ class Spline(val waypoints: Array<Pose>): Path() {
         return tangentVec(closestT).getRightNormal()
     }
 
+    override fun hessian(r: Vector2D, closestT: Double): RealMatrix {
+        return Array2DRowRealMatrix(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(0.0, 2.0)))
+    }
+
     val length: Double
     val polynomials: Array<Part>
 
@@ -111,10 +116,11 @@ class Spline(val waypoints: Array<Pose>): Path() {
         val length: Double
         var beginS: Double = 0.0
         var endS: Double = 1.0
+        var doneWithParam = false
         init {
             // Find the length of the spline part
             val maxDK = 0.1
-            val maxLen = 0.1
+            val maxLen = 0.2
             fun subdivide(tBegin: Double, tEnd: Double): Array<Biarc.ArcSegment> {
                 val tMid = (tEnd + tBegin) / 2.0
                 val pBegin = eval(tBegin)
@@ -145,17 +151,38 @@ class Spline(val waypoints: Array<Pose>): Path() {
                 arc.end = arc.begin + len_
                 lenAccum += len_
             }
+            doneWithParam = true
         }
         private fun getRealS(s: Double): Double {
             return invLerp(beginS, endS, s)
         }
+        private fun getArcFor(s: Double): Biarc.BiarcPartWrapper {
+            arcs.forEach {
+                if (s in it) {
+                    return it
+                }
+            }
+            if (s >= endS) {
+                return arcs.last()
+            }
+            else if (s <= beginS) {
+                return arcs.first()
+            }
+            throw IllegalArgumentException("$s not in domain $beginS .. $endS")
+        }
         fun curvature(s: Double): Double {
             val s_ = getRealS(s)
+            if (doneWithParam) {
+                return getArcFor(s_).curvature(s_)
+            }
             return (xPoly.derivative(s_) * yPoly.secondDerivative(s_) - yPoly.derivative(s_) * xPoly.secondDerivative(s_)) /
                     (xPoly.derivative(s_).pow(2) + yPoly.derivative(s_).pow(2)).pow(1.5)
         }
         fun eval(s: Double): Vector2D {
             val s_ = getRealS(s)
+            if (doneWithParam) {
+                return getArcFor(s_).r(s_)
+            }
             return Vector2D(xPoly.calculate(s_), yPoly.calculate(s_))
         }
         fun project(r: Vector2D): Double {
@@ -165,7 +192,7 @@ class Spline(val waypoints: Array<Pose>): Path() {
                 try {
                     val testT = it.project(r)
                     val testPt = it.r(testT)
-                    val testDist = testPt.sqDist(r)
+                    val testDist = testPt.dist(r)
                     if (testDist < minDist) {
                         minDist = testDist
                         minT = testT
@@ -188,6 +215,9 @@ class Spline(val waypoints: Array<Pose>): Path() {
 
         fun tangentVec(t: Double): Vector2D {
             val s = getRealS(t)
+            if (doneWithParam) {
+                return getArcFor(s).tangentVec(s)
+            }
             return Vector2D(xPoly.derivative(s), yPoly.derivative(s)).normalized()
         }
     }

@@ -5,12 +5,15 @@ import java.awt.Color
 import kotlin.math.PI
 
 fun main(args: Array<String>) {
-    val path = Spline(arrayOf(Pose(0.0, 0.0, 0.0), Pose(3.0, 3.0, 0.0)))
+    val path = Spline(arrayOf(
+            Pose(0.0, 0.0, 0.0),
+            Pose(3.0, 3.0, 0.0),
+            Pose(6.0, 0.0, 0.0)))
     println(path.length)
     //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
     val controller = GVFController(path, 100.0, 1.0)
     val dt = 10.0 / 1000.0
-    val speed = 1.0
+    val speed = 3.0
 
     val xRobot = ArrayList<Double>()
     val yRobot = ArrayList<Double>()
