@@ -1,11 +1,12 @@
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.style.markers.None
+import paths.SplinePath
 import java.awt.Color
 import kotlin.math.PI
 
 fun main(args: Array<String>) {
-    val arc = Spline(arrayOf(
+    val arc = SplinePath(arrayOf(
             Pose(0.0, 0.0, PI / 2),
             Pose(2.0, 2.0, 0.0)))
 

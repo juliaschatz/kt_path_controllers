@@ -49,4 +49,5 @@ abstract class Path {
 
     }
     abstract fun nVec(r: Vector2D, closestT: Double): Vector2D
+    abstract fun length(): Double
 }

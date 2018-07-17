@@ -1,17 +1,20 @@
+import controllers.GVFController
+import controllers.PurePursuitController
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.style.markers.None
+import paths.SplinePath
 import java.awt.Color
 import kotlin.math.PI
 
 fun main(args: Array<String>) {
-    val path = Spline(arrayOf(
+    val path = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
             Pose(3.0, 3.0, 0.0),
             Pose(6.0, 0.0, 0.0)))
     println(path.length)
     //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
-    val controller = GVFController(path, 150.0, 1.0)
+    val controller = PurePursuitController(path, 1.0)//GVFController(path, 150.0, 1.0)
     val dt = 10.0 / 1000.0
     val speed = 3.0
 
@@ -31,7 +34,8 @@ fun main(args: Array<String>) {
         var curvature: Double
 
         try {
-            curvature = controller.curvatureControl(position, speed, heading, dt)
+            val pose = Pose(position.x, position.y, heading.angle())
+            curvature = controller.curvatureControl(pose, speed, dt)
         }
         catch (e: IllegalArgumentException) {
             break

@@ -1,3 +1,10 @@
+package paths
+
+import Biarc
+import Path
+import Pose
+import Vector2D
+import toHeading
 import java.lang.IllegalArgumentException
 import kotlin.math.*
 
@@ -78,6 +85,10 @@ fun biarcInterpolate(p1: Pose, p2: Pose): Pair<Biarc.BiarcPart, Biarc.BiarcPart>
 }
 
 class BiarcPath(waypoints: Array<Pose>) : Path() {
+    override fun length(): Double {
+        return totalLen
+    }
+
     val segments = arrayOfNulls<Biarc.BiarcPartWrapper>((waypoints.size-1) * 2)
     val totalLen: Double
     init {

@@ -1,19 +1,30 @@
+package paths
+
+import Biarc
+import Path
+import Polynomial
+import Pose
+import Vector2D
+import invLerp
+import lerp
+import minimize
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.LUDecomposition
-import org.apache.commons.math3.linear.RealMatrix
-import org.apache.commons.math3.optim.univariate.BrentOptimizer
-import org.apache.commons.math3.optim.univariate.UnivariateOptimizer
 import java.lang.IllegalArgumentException
 import kotlin.math.*
 
 
-class Spline(val waypoints: Array<Pose>): Path() {
+class SplinePath(val waypoints: Array<Pose>): Path() {
+    override fun length(): Double {
+        return length
+    }
+
     override fun closestTOnPathTo(r: Vector2D, guess: Double): Double {
         return closestTOnPathToArcs(r)
     }
     fun closestTOnPathToGradient(r: Vector2D, guess: Double): Double {
-        val t = minimize({t: Double -> calculatePoint(t).sqDist(r)}, guess)
+        val t = minimize({ t: Double -> calculatePoint(t).sqDist(r) }, guess)
         return t
     }
     fun closestTOnPathToArcs(r: Vector2D): Double {
@@ -99,7 +110,7 @@ class Spline(val waypoints: Array<Pose>): Path() {
                 return Polynomial(coeffVec.toArray())
             }
             polynomials[i] = Part(reticHalf(wp1.x, wp2.x, cos(wp1.heading), cos(wp2.heading)),
-                                  reticHalf(wp1.y, wp2.y, sin(wp1.heading), sin(wp2.heading)))
+                    reticHalf(wp1.y, wp2.y, sin(wp1.heading), sin(wp2.heading)))
         }
         length = polynomials.sumByDouble { it.length }
         var lenAccum = 0.0

@@ -1,8 +1,21 @@
+package paths
+
+import Path
+import Vector2D
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
 import kotlin.math.*
 
 class EllipsePath(val x0: Double, val y0: Double, val a: Double, val b: Double): Path() {
+    val len: Double
+    init {
+        val h = (a - b).pow(2) / (a + b).pow(2)
+        len = PI * (a + b) * (1 + h/4 + h.pow(2)/64 + h.pow(3)/256 + 25*h.pow(4)/16384)
+    }
+    override fun length(): Double {
+        return len
+    }
+
     override fun closestTOnPathTo(r: Vector2D, guess: Double): Double {
         return (r - Vector2D(x0, y0)).angle() / (2 * PI)
     }
