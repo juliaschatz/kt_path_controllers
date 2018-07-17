@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
             Pose(6.0, 0.0, 0.0)))
     println(path.length)
     //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
-    val controller = GVFController(path, 100.0, 1.0)
+    val controller = GVFController(path, 150.0, 1.0)
     val dt = 10.0 / 1000.0
     val speed = 3.0
 

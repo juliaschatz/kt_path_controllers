@@ -71,8 +71,8 @@ class Spline(val waypoints: Array<Pose>): Path() {
         return tangentVec(closestT).getRightNormal()
     }
 
-    override fun hessian(r: Vector2D, closestT: Double): RealMatrix {
-        return Array2DRowRealMatrix(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(0.0, 2.0)))
+    fun curvature(t: Double): Double {
+        return getPartFor(t).curvature(t)
     }
 
     val length: Double
@@ -119,8 +119,8 @@ class Spline(val waypoints: Array<Pose>): Path() {
         var doneWithParam = false
         init {
             // Find the length of the spline part
-            val maxDK = 0.1
-            val maxLen = 0.2
+            val maxDK = 1.0
+            val maxLen = 0.5
             fun subdivide(tBegin: Double, tEnd: Double): Array<Biarc.ArcSegment> {
                 val tMid = (tEnd + tBegin) / 2.0
                 val pBegin = eval(tBegin)
@@ -130,10 +130,12 @@ class Spline(val waypoints: Array<Pose>): Path() {
                 if (Vector2D.arePointsCollinear(pBegin, pMid, pEnd)) {
                     return subdivide(tBegin, tMid) + subdivide(tMid, tEnd)
                 }
+                val kEnd = curvature(tEnd)
+                val kBegin = curvature(tBegin)
 
-                val arc = Biarc.ArcSegment.fromThreePoints(pBegin, pMid, pEnd)
+                val arc = Biarc.AugmentedArc.fromThreePoints(pBegin, pMid, pEnd, kBegin, kEnd)
                 val doSubdivide = arc.length() > maxLen ||
-                                  (curvature(tEnd) - curvature(tBegin)).absoluteValue > maxDK
+                                  (kEnd - kBegin).absoluteValue > maxDK
 
 
                 if (doSubdivide) {

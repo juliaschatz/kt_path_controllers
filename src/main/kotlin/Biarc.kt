@@ -36,8 +36,8 @@ class Biarc {
             return line.normalized()
         }
     }
-    class ArcSegment(val center: Vector2D, val radius: Double, val startAngle: Double, val endAngle: Double): BiarcPart() {
-        override fun curvature(toWrappedSpace: Double): Double {
+    open class ArcSegment(val center: Vector2D, val radius: Double, val startAngle: Double, val endAngle: Double): BiarcPart() {
+        override fun curvature(t: Double): Double {
             return 1.0 / radius
         }
 
@@ -110,6 +110,39 @@ class Biarc {
         }
         operator fun contains(angle: Double): Boolean {
             return invertAngle(angle) in 0.0..1.0
+        }
+    }
+    class AugmentedArc(center: Vector2D, radius: Double, startAngle: Double, endAngle: Double, val kBegin: Double, val kEnd: Double): ArcSegment(center, radius, startAngle, endAngle) {
+        companion object {
+            fun fromThreePoints(ptBegin: Vector2D, ptMid: Vector2D, ptEnd: Vector2D, kBegin: Double, kEnd: Double): AugmentedArc {
+                val hNum = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.sqNorm(), ptBegin.y, 1.0),
+                        doubleArrayOf(ptMid.sqNorm(),   ptMid.y,   1.0),
+                        doubleArrayOf(ptEnd.sqNorm(),   ptEnd.y,   1.0)))
+                val denomMat = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.x, ptBegin.y, 1.0),
+                        doubleArrayOf(ptMid.x,   ptMid.y,   1.0),
+                        doubleArrayOf(ptEnd.x,   ptEnd.y,   1.0)
+                ))
+                val denom = (2 * LUDecomposition(denomMat).determinant)
+                val h = LUDecomposition(hNum).determinant / denom
+
+                val kNum = Array2DRowRealMatrix(arrayOf(
+                        doubleArrayOf(ptBegin.x, ptBegin.sqNorm(), 1.0),
+                        doubleArrayOf(ptMid.x,   ptMid.sqNorm(),   1.0),
+                        doubleArrayOf(ptEnd.x,   ptEnd.sqNorm(),   1.0)
+                ))
+                val k = LUDecomposition(kNum).determinant / denom
+
+                val center_ = Vector2D(h, k)
+                val radius_ = center_.dist(ptBegin)
+                val beginAngle_ = (ptBegin - center_).angle()
+                val endAngle_ = (ptEnd - center_).angle()
+                return AugmentedArc(center_, radius_, beginAngle_, endAngle_, kBegin, kEnd)
+            }
+        }
+        override fun curvature(t: Double): Double {
+            return lerp(kBegin, kEnd, t)
         }
     }
 
