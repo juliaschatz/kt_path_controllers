@@ -90,56 +90,85 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
     val polynomials: Array<Part>
 
     init {
-        val mat = Array2DRowRealMatrix(arrayOf(
-                doubleArrayOf( 1.0,  1.0, 1.0, 1.0, 1.0, 1.0),
-                doubleArrayOf( 0.0,  0.0, 0.0, 0.0, 0.0, 1.0),
-                doubleArrayOf( 5.0,  4.0, 3.0, 2.0, 1.0, 0.0),
-                doubleArrayOf( 0.0,  0.0, 0.0, 0.0, 1.0, 0.0),
-                doubleArrayOf(20.0, 12.0, 6.0, 2.0, 0.0, 0.0),
-                doubleArrayOf( 0.0,  0.0, 0.0, 2.0, 0.0, 0.0)
-        ))
-        polynomials = (arrayOfNulls<Part>(waypoints.size - 1) as Array<Part>)
-        for (i in 0 until polynomials.size) {
+
+        val polynomials_ = ArrayList<Part>()
+        fun divide(p1: Pose, p2: Pose): List<Part> {
+            val zVec = Vector2D(0.0, 0.0)
+            val polyPart = Part(p1, p2)/*
+            if (polyPart.maxCurvature > 0.4) {
+                val biarc = biarcInterpolate(p1, p2)
+                val tOffset = 0.25
+                val mid1Pt = biarc.first.r(tOffset)
+                val mid1Tan = biarc.first.tangentVec(tOffset)
+                val mid1Pose = Pose(mid1Pt.x, mid1Pt.y, mid1Tan.angle())
+
+                val mid2Pt = biarc.second.r(1 - tOffset)
+                val mid2Tan = biarc.second.tangentVec(1 - tOffset)
+                val mid2Pose = Pose(mid2Pt.x, mid2Pt.y, mid2Tan.angle())
+
+                return divide(p1, mid1Pose) + divide(mid1Pose, mid2Pose) + divide(mid2Pose, p2)
+            }*/
+            return arrayListOf(polyPart)
+        }
+        for (i in 0 until waypoints.size - 1) {
             val wp1 = waypoints[i]
             val wp2 = waypoints[i+1]
+            polynomials_ += Part(wp1, wp2)
 
-            fun reticHalf(a: Double, b: Double, tangentA: Double, tangentB: Double): Polynomial {
-                val vecB = ArrayRealVector(doubleArrayOf(b, a, tangentB, tangentA, 0.0, 0.0))
-                val solver = LUDecomposition(mat).solver
-                val coeffVec = solver.solve(vecB)
-                return Polynomial(coeffVec.toArray())
-            }
-            polynomials[i] = Part(reticHalf(wp1.x, wp2.x, cos(wp1.heading), cos(wp2.heading)),
-                    reticHalf(wp1.y, wp2.y, sin(wp1.heading), sin(wp2.heading)))
         }
-        length = polynomials.sumByDouble { it.length }
+        length = polynomials_.sumByDouble { it.length }
         var lenAccum = 0.0
-        polynomials.forEach {
+        polynomials_.forEach {
             it.beginS = lenAccum
             lenAccum += it.length / length
             it.endS = lenAccum
         }
-
+        polynomials = polynomials_.toTypedArray()
 
     }
-    class Part(private val xPoly: Polynomial, private val yPoly: Polynomial) {
+    class Part(val wp1: Pose, val wp2: Pose) {
         val arcs: Array<Biarc.BiarcPartWrapper>
         val length: Double
         var beginS: Double = 0.0
-        var endS: Double = 1.0
+        var endS: Double
         var doneWithParam = false
+
+        val maxCurvature: Double
+        private val poly: Polynomial
+
+        private val refFrame = Pose(wp1.x, wp1.y, (wp2 - wp1).angle())
+
         init {
+            val wp2rf = refFrame.translate(wp2)
+            val wp1rf = refFrame.translate(wp1)
+            val ex = wp2rf.x
+            endS = ex
+            val mat = Array2DRowRealMatrix(arrayOf(
+                    doubleArrayOf( ex.pow(5),  ex.pow(4), ex.pow(3), ex.pow(2), ex, 1.0),
+                    doubleArrayOf( 0.0,  0.0, 0.0, 0.0, 0.0, 1.0),
+                    doubleArrayOf( 5.0 * ex.pow(4),  4.0 * ex.pow(3), 3.0 * ex.pow(2), 2.0 * ex, 1.0, 0.0),
+                    doubleArrayOf( 0.0,  0.0, 0.0, 0.0, 1.0, 0.0),
+                    doubleArrayOf(20.0 * ex.pow(3), 12.0 * ex.pow(2), 6.0 * ex, 2.0, 0.0, 0.0),
+                    doubleArrayOf( 0.0,  0.0, 0.0, 2.0, 0.0, 0.0)
+            ))
+
+            val vecB = ArrayRealVector(doubleArrayOf(wp2rf.y, 0.0, tan(wp2rf.heading), tan(wp1rf.heading), 0.0, 0.0))
+            val arr = LUDecomposition(mat).solver.solve(vecB).toArray()
+            poly = Polynomial(arr)
+
             // Find the length of the spline part
-            val maxDK = 1.0
-            val maxLen = 0.5
-            fun subdivide(tBegin: Double, tEnd: Double): Array<Biarc.ArcSegment> {
+            val maxDK = 0.5
+            val maxLen = 0.25
+            var absCurvatureMax = 0.0
+            fun subdivide(tBegin: Double, tEnd: Double, d: Int=0): Array<Biarc.ArcSegment> {
                 val tMid = (tEnd + tBegin) / 2.0
                 val pBegin = eval(tBegin)
                 val pMid = eval(tMid)
                 val pEnd = eval(tEnd)
 
                 if (Vector2D.arePointsCollinear(pBegin, pMid, pEnd)) {
-                    return subdivide(tBegin, tMid) + subdivide(tMid, tEnd)
+                    println("$pBegin, $pMid, $pEnd")
+                    return subdivide(tBegin, tMid, d+1) + subdivide(tMid, tEnd, d+1)
                 }
                 val kEnd = curvature(tEnd)
                 val kBegin = curvature(tBegin)
@@ -150,12 +179,18 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
 
 
                 if (doSubdivide) {
-                    return subdivide(tBegin, tMid) + subdivide(tMid, tEnd)
+                    return subdivide(tBegin, tMid, d+1) + subdivide(tMid, tEnd, d+1)
+                }
+                if (kEnd.absoluteValue > absCurvatureMax) {
+                    absCurvatureMax = kEnd.absoluteValue
+                }
+                else if (kBegin.absoluteValue > absCurvatureMax) {
+                    absCurvatureMax = kBegin.absoluteValue
                 }
                 return arrayOf(arc)
             }
 
-            arcs = subdivide(0.0, 1.0).map { Biarc.BiarcPartWrapper(it, 0.0, 1.0) }.toTypedArray()
+            arcs = subdivide(beginS, endS).map { Biarc.BiarcPartWrapper(it, 0.0, 1.0) }.toTypedArray()
             length = arcs.sumByDouble { it.length() }
             var lenAccum = 0.0
             arcs.forEachIndexed { index: Int, arc: Biarc.BiarcPartWrapper ->
@@ -164,6 +199,7 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
                 arc.end = arc.begin + len_
                 lenAccum += len_
             }
+            maxCurvature = absCurvatureMax
             doneWithParam = true
         }
         private fun getRealS(s: Double): Double {
@@ -188,15 +224,15 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
             if (doneWithParam) {
                 return getArcFor(s_).curvature(s_)
             }
-            return (xPoly.derivative(s_) * yPoly.secondDerivative(s_) - yPoly.derivative(s_) * xPoly.secondDerivative(s_)) /
-                    (xPoly.derivative(s_).pow(2) + yPoly.derivative(s_).pow(2)).pow(1.5)
+            val slop = poly.derivative(s).pow(2)
+            return poly.secondDerivative(s) / (1 + slop).pow(1.5)
         }
         fun eval(s: Double): Vector2D {
             val s_ = getRealS(s)
             if (doneWithParam) {
                 return getArcFor(s_).r(s_)
             }
-            return Vector2D(xPoly.calculate(s_), yPoly.calculate(s_))
+            return refFrame.invTranslate(Vector2D(s, poly.calculate(s)))
         }
         fun project(r: Vector2D): Double {
             var minDist = Double.MAX_VALUE
@@ -227,11 +263,13 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
         }
 
         fun tangentVec(t: Double): Vector2D {
-            val s = getRealS(t)
+            val s_ = getRealS(t)
             if (doneWithParam) {
-                return getArcFor(s).tangentVec(s)
+                return getArcFor(s_).tangentVec(s_)
             }
-            return Vector2D(xPoly.derivative(s), yPoly.derivative(s)).normalized()
+            val angle = atan2(poly.derivative(t), 1.0)
+            val realAngle = angle + this.refFrame.heading
+            return Vector2D.fromAngle(realAngle)
         }
     }
 }

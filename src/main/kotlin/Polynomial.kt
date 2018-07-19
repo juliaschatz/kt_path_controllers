@@ -6,21 +6,37 @@ class Polynomial(coefficients_: DoubleArray) {
     fun calculate(x: Double): Double {
         var sum = 0.0
         coefficients.forEachIndexed { index: Int, coef: Double ->
-            sum += coef * x.pow(index)
+            if (index == 0) {
+                sum += coef
+            }
+            else {
+                sum += coef * x.pow(index)
+            }
         }
         return sum
     }
     fun derivative(x: Double): Double {
         var sum = 0.0
         coefficients.forEachIndexed { index: Int, coef: Double ->
-            sum += coef * index * x.pow(index - 1)
+            if (index == 1) {
+                sum += coef
+            }
+            else if (index > 1) {
+                sum += coef * index * x.pow(index - 1)
+            }
+
         }
         return sum
     }
     fun secondDerivative(x: Double): Double {
         var sum = 0.0
         coefficients.forEachIndexed { index: Int, coef: Double ->
-            sum += coef * index * (index - 1) * x.pow(index - 2)
+            if (index == 2) {
+                sum += coef
+            }
+            else if (index > 2) {
+                sum += coef * index * (index - 1) * x.pow(index - 2)
+            }
         }
         return sum
     }
@@ -30,7 +46,7 @@ class Polynomial(coefficients_: DoubleArray) {
 
     override fun toString(): String {
         var str = ""
-        for (i in (coefficients.size - 1)..-1) {
+        for (i in (coefficients.size - 1) downTo 0) {
             str += coefficients[i].toString() + "x^" + i
             if (i != 0) {
                 str += " + "

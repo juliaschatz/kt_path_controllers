@@ -136,8 +136,8 @@ class Biarc {
 
                 val center_ = Vector2D(h, k)
                 val radius_ = center_.dist(ptBegin)
-                val beginAngle_ = (ptBegin - center_).angle()
-                val endAngle_ = (ptEnd - center_).angle()
+                val beginAngle_ = normalizeAngle((ptBegin - center_).angle())
+                val endAngle_ = normalizeAngle((ptEnd - center_).angle())
                 return AugmentedArc(center_, radius_, beginAngle_, endAngle_, kBegin, kEnd)
             }
         }

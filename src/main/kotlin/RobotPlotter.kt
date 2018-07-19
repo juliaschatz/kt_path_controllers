@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
             Pose(6.0, 0.0, 0.0)))
     println(path.length)
     //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
-    val controller = PurePursuitController(path, 1.0)//GVFController(path, 150.0, 1.0)
+    val controller = PurePursuitController(path, 0.25) //GVFController(path, 100.0, 100.0)
     val dt = 10.0 / 1000.0
     val speed = 3.0
 
@@ -49,7 +49,7 @@ fun main(args: Array<String>) {
             val radius = 1.0 / curvature
             var leftSpeed: Double
             var rightSpeed: Double
-            val D = 2.0
+            val D = 1.0
             if (radius > 0) {
                 leftSpeed = speed
                 rightSpeed = leftSpeed * radiusRatio(radius, D)
