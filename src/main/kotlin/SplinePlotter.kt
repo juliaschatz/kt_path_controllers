@@ -7,8 +7,7 @@ import kotlin.math.PI
 
 fun main(args: Array<String>) {
     val arc = SplinePath(arrayOf(
-            Pose(0.0, 0.0, PI / 2),
-            Pose(2.0, 2.0, 0.0),
+            Pose(0.0, 0.0, 0.0),
             Pose(6.0, 0.0, 0.0)))
 
     val xPath = DoubleArray(201)

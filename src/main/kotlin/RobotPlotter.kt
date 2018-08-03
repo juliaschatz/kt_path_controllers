@@ -10,9 +10,7 @@ import kotlin.math.PI
 fun main(args: Array<String>) {
     val path = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
-            Pose(3.0, 3.0, 0.0),
-            Pose(6.0, 0.0, 0.0)))
-    println(path.length)
+            Pose(30.0, 0.0, -PI/4)))
     //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
     val controller = PurePursuitController(path, 0.25) //GVFController(path, 100.0, 100.0)
     val dt = 10.0 / 1000.0
@@ -24,7 +22,7 @@ fun main(args: Array<String>) {
     val errs = ArrayList<Double>()
 
     var time = 0.0
-    var position = Vector2D(0.0, 0.0)
+    var position = Vector2D(0.001, 0.0)
     var heading = Vector2D.fromAngle(0 * PI / 2)
 
     while (true) {
@@ -38,6 +36,7 @@ fun main(args: Array<String>) {
             curvature = controller.curvatureControl(pose, speed, dt)
         }
         catch (e: IllegalArgumentException) {
+            println("controller error")
             break
         }
 
@@ -66,7 +65,7 @@ fun main(args: Array<String>) {
 
 
         try {
-            errs.add(path.error(path.levelSet(position, path.closestTOnPathTo(position, 0.0))))
+            errs.add(path.error(path.levelSet(position, path.closestTOnPathTo(position, 0.001))))
         }
         catch (e: IllegalArgumentException) {
             break
@@ -85,7 +84,7 @@ fun main(args: Array<String>) {
         xPath.set(i, xy.x)
         yPath.set(i, xy.y)
     }
-    println("${xRobot.size} ${yRobot.size}")
+    println("$time")
 
     val chart = QuickChart.getChart("Path", "X", "Y", "Path", xPath, yPath)
     val robotSeries = chart.addSeries("Robot Position",  xRobot, yRobot)

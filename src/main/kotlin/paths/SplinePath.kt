@@ -21,15 +21,15 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
     }
 
     override fun closestTOnPathTo(r: Vector2D, guess: Double): Double {
-        return closestTOnPathToArcs(r)
+        return closestTOnPathToArcs(r, guess)
     }
     fun closestTOnPathToGradient(r: Vector2D, guess: Double): Double {
         val t = minimize({ t: Double -> calculatePoint(t).sqDist(r) }, guess)
         return t
     }
-    fun closestTOnPathToArcs(r: Vector2D): Double {
+    fun closestTOnPathToArcs(r: Vector2D, guess: Double): Double {
         var minDist = Double.MAX_VALUE
-        var minT: Double? = null
+        var minT: Double? = guess
         polynomials.forEach {
             try {
                 val testT = it.project(r)
@@ -160,18 +160,21 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
             val maxDK = 0.5
             val maxLen = 0.25
             var absCurvatureMax = 0.0
-            fun subdivide(tBegin: Double, tEnd: Double, d: Int=0): Array<Biarc.ArcSegment> {
+            fun subdivide(tBegin: Double, tEnd: Double, d: Int=0): Array<Biarc.BiarcPart> {
                 val tMid = (tEnd + tBegin) / 2.0
                 val pBegin = eval(tBegin)
                 val pMid = eval(tMid)
                 val pEnd = eval(tEnd)
 
-                if (Vector2D.arePointsCollinear(pBegin, pMid, pEnd)) {
-                    println("$pBegin, $pMid, $pEnd")
-                    return subdivide(tBegin, tMid, d+1) + subdivide(tMid, tEnd, d+1)
-                }
                 val kEnd = curvature(tEnd)
                 val kBegin = curvature(tBegin)
+
+                if (Vector2D.arePointsCollinear(pBegin, pMid, pEnd)) {
+                    if (pBegin.dist(pMid) + pMid.dist(pEnd) <= maxLen) {
+                        return arrayOf(Biarc.AugmentedLine(pBegin, pEnd, kBegin, kEnd))
+                    }
+                    return subdivide(tBegin, tMid, d+1) + subdivide(tMid, tEnd, d+1)
+                }
 
                 val arc = Biarc.AugmentedArc.fromThreePoints(pBegin, pMid, pEnd, kBegin, kEnd)
                 val doSubdivide = arc.length() > maxLen ||

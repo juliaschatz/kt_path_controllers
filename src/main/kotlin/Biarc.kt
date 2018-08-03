@@ -13,7 +13,7 @@ class Biarc {
         abstract fun tangentVec(t: Double): Vector2D
         abstract fun curvature(toWrappedSpace: Double): Double
     }
-    class LineSegment(val begin: Vector2D, val end: Vector2D): BiarcPart() {
+    open class LineSegment(val begin: Vector2D, val end: Vector2D): BiarcPart() {
         override fun curvature(toWrappedSpace: Double): Double {
             return 0.0
         }
@@ -84,16 +84,12 @@ class Biarc {
             val angle = (center - p).angle()
             val oppAngle = angle + PI
             val negAngle = angle - PI
-            if (angle in this) {
-                return invertAngle(angle)
+            return when {
+                angle in this -> invertAngle(angle)
+                oppAngle in this -> invertAngle(oppAngle)
+                negAngle in this -> invertAngle(negAngle)
+                else -> throw IllegalArgumentException("Point outside projection domain")
             }
-            else if (oppAngle in this) {
-                return invertAngle(oppAngle)
-            }
-            else if (negAngle in this) {
-                return invertAngle(negAngle)
-            }
-            throw IllegalArgumentException("Point outside projection domain")
         }
         fun invertAngle(angle: Double): Double {
             return invLerp(startAngle, endAngle, angle)
@@ -141,6 +137,14 @@ class Biarc {
                 return AugmentedArc(center_, radius_, beginAngle_, endAngle_, kBegin, kEnd)
             }
         }
+        override fun curvature(t: Double): Double {
+            return lerp(kBegin, kEnd, t)
+        }
+    }
+
+    class AugmentedLine(val ptBegin: Vector2D, val ptEnd: Vector2D, val kBegin: Double, val kEnd: Double):
+            LineSegment(ptBegin, ptEnd) {
+
         override fun curvature(t: Double): Double {
             return lerp(kBegin, kEnd, t)
         }
