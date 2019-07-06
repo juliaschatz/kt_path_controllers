@@ -1,3 +1,6 @@
+package paths
+
+import Vector2D
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
 import java.lang.Math.atan
@@ -36,10 +39,10 @@ abstract class Path {
 
         val ddy = (dy2 - dy1) / d
 
-        val xy1 = this.levelSet(r + Vector2D(-d/2, -d/2), closestT)
-        val xy2 = this.levelSet(r + Vector2D(d/2, -d/2), closestT)
-        val xy3 = this.levelSet(r + Vector2D(-d/2, d/2), closestT)
-        val xy4 = this.levelSet(r + Vector2D(d/2, d/2), closestT)
+        val xy1 = this.levelSet(r + Vector2D(-d / 2, -d / 2), closestT)
+        val xy2 = this.levelSet(r + Vector2D(d / 2, -d / 2), closestT)
+        val xy3 = this.levelSet(r + Vector2D(-d / 2, d / 2), closestT)
+        val xy4 = this.levelSet(r + Vector2D(d / 2, d / 2), closestT)
 
         val dydx = ((xy4 - xy3) / d - (xy2 - xy1) / d) / d
 

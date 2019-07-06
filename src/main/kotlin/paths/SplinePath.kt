@@ -1,7 +1,6 @@
 package paths
 
 import Biarc
-import Path
 import Polynomial
 import Pose
 import Vector2D

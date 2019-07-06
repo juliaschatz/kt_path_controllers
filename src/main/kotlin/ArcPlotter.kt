@@ -13,6 +13,6 @@ fun main(args: Array<String>) {
         yPath.set(i, xy.y)
     }
 
-    val chart = QuickChart.getChart("Path", "X", "Y", "Path", xPath, yPath)
+    val chart = QuickChart.getChart("paths.Path", "X", "Y", "paths.Path", xPath, yPath)
     SwingWrapper(chart).displayChart()
 }

@@ -8,7 +8,7 @@ import kotlin.math.PI
 fun main(args: Array<String>) {
     val arc = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
-            Pose(6.0, 0.0, 0.0)))
+            Pose(6.0, 6.0, 0.0)))
 
     val xPath = DoubleArray(201)
     val yPath = DoubleArray(201)
@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
 
     } }
     println("$arcCt arcs")
-    val chart = QuickChart.getChart("Path", "X", "Y", "Path", xPath, yPath)
+    val chart = QuickChart.getChart("paths.Path", "X", "Y", "paths.Path", xPath, yPath)
     //val appr = chart.addSeries("Approximation", xAppr, yAppr)
     //appr.marker = None()
     //appr.lineColor = Color.ORANGE

@@ -1,7 +1,7 @@
 package controllers
 
 import Vector2D
-import Path
+import paths.Path
 import Pose
 
 abstract class PathController(val path: Path) {

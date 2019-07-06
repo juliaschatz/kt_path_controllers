@@ -7,9 +7,12 @@ import Vector2D
 import toHeading
 import Pose
 import kotlin.math.pow
+import SkidSteerCommand
+import motionprofile.MotionProfile
+import motionprofile.TrapezoidalMotionProfile
 
-class GVFController(path: Path, val k_delta: Double, val k_n: Double): PathController(path) {
-    var lastT = 0.0001
+class TimeVariantGVFController(path: Path, val k_delta: Double, val k_n: Double, val limits: MotionProfile.Limits): TimeVariantPathController(path) {
+    val motionProfile = TrapezoidalMotionProfile(path.length(), limits);
     fun vectorAt(r: Vector2D, closestT: Double): Vector2D {
         return path.tangentVec(closestT).minus(path.nVec(r, closestT).scalarMul(k_n * path.error(path.levelSet(r, closestT))))
     }
@@ -29,22 +32,23 @@ class GVFController(path: Path, val k_delta: Double, val k_n: Double): PathContr
 
         return -1.0 * this.desiredHeadingVecDeriv(r, speed, vector, curHeading, closestT).dot(desiredHeadingVec.getRightNormal())
     }
-    override fun curvatureControl(pose: Pose, speed: Double, dt: Double): Double {
-        val closestT = path.closestTOnPathTo(pose, lastT)
+    override fun curvatureControl(pose: Pose, time: Double): SkidSteerCommand {
+        val t = motionProfile.getPosition(time) / path.length()
+        val speed = motionProfile.getSpeed(time)
+
         val curHeading_ = pose.directionVector()
         val curHeading = curHeading_.normalized()
-        val vector = vectorAt(pose, closestT)
+        val vector = vectorAt(pose, t)
         val desiredHeadingVec = vector.normalized()
         val angleDelta = toHeading(desiredHeadingVec.angle() - curHeading.angle())
-        lastT = closestT
 
-        return desiredCurvature(pose, speed, curHeading, vector, desiredHeadingVec, closestT) - k_delta * angleDelta
+        val curvature = desiredCurvature(pose, speed, curHeading, vector, desiredHeadingVec, t) - k_delta * angleDelta
+        return SkidSteerCommand(speed, curvature)
     }
-    override fun vectorControl(pose: Pose, speed: Double, dt: Double): Vector2D {
-        val closestT = path.closestTOnPathTo(pose, lastT)
-        lastT = closestT
-        val vector = vectorAt(pose, closestT)
+    override fun vectorControl(pose: Pose, time: Double): Vector2D {
+        val t = motionProfile.getPosition(time) / path.length()
+        val vector = vectorAt(pose, t)
         val desiredHeadingVec = vector.normalized()
-        return desiredHeadingVec
+        return desiredHeadingVec.scalarMul(motionProfile.getSpeed(time))
     }
 }

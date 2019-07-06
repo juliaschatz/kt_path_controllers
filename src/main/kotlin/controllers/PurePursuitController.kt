@@ -1,7 +1,7 @@
 package controllers
 
 import Vector2D
-import Path
+import paths.Path
 import Pose
 import kotlin.math.pow
 

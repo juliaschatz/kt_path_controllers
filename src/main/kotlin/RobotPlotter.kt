@@ -1,5 +1,7 @@
 import controllers.GVFController
 import controllers.PurePursuitController
+import controllers.TimeVariantGVFController
+import motionprofile.MotionProfile
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.style.markers.None
@@ -8,13 +10,15 @@ import java.awt.Color
 import kotlin.math.PI
 
 fun main(args: Array<String>) {
+    val CURVATURE = true
+
     val path = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
-            Pose(30.0, 0.0, -PI/4)))
-    //path.polynomials[0].arcs.forEach { println((it.wrapped as Biarc.ArcSegment).length()) }
-    val controller = PurePursuitController(path, 0.25) //GVFController(path, 100.0, 100.0)
+            Pose(20.0, 0.0, -PI/4)))
+    println(path.length)
+    val controller = TimeVariantGVFController(path, 10.0, .4,
+                                              MotionProfile.Limits(3.0, 3.0, 0.0))
     val dt = 10.0 / 1000.0
-    val speed = 3.0
 
     val xRobot = ArrayList<Double>()
     val yRobot = ArrayList<Double>()
@@ -22,46 +26,51 @@ fun main(args: Array<String>) {
     val errs = ArrayList<Double>()
 
     var time = 0.0
-    var position = Vector2D(0.001, 0.0)
-    var heading = Vector2D.fromAngle(0 * PI / 2)
+    var position = Vector2D(0.00, -1.0)
+    var heading = Vector2D.fromAngle(0.0 * PI / 2)
 
     while (true) {
         if (time >= 10.0) {
             break
         }
         var curvature: Double
+        var speed: Double
+        if (CURVATURE) {
+            try {
+                val pose = Pose(position.x, position.y, heading.angle())
+                val command = controller.curvatureControl(pose, time)
+                speed = command.speed
+                curvature = command.curvature
+            } catch (e: IllegalArgumentException) {
+                println("controller error")
+                break
+            }
 
-        try {
-            val pose = Pose(position.x, position.y, heading.angle())
-            curvature = controller.curvatureControl(pose, speed, dt)
-        }
-        catch (e: IllegalArgumentException) {
-            println("controller error")
-            break
-        }
+            if (curvature == 0.0) {
 
-        if (curvature == 0.0) {
-
+            } else {
+                val radiusRatio: (Double, Double) -> Double = { R: Double, D: Double -> (R - D / 2.0) / (R + D / 2.0) }
+                val radius = 1.0 / curvature
+                var leftSpeed: Double
+                var rightSpeed: Double
+                val D = 1.0
+                if (radius > 0) {
+                    leftSpeed = speed
+                    rightSpeed = leftSpeed * radiusRatio(radius, D)
+                } else {
+                    rightSpeed = speed
+                    leftSpeed = rightSpeed * radiusRatio(-radius, D)
+                }
+                val w: Double = (rightSpeed - leftSpeed) / D
+                heading = Vector2D.fromAngle(heading.angle() + w * dt)
+            }
+            position += heading.scalarMul(speed * dt)
         }
         else {
-            val radiusRatio: (Double, Double) -> Double = {R: Double, D: Double -> (R - D/2.0) / (R + D/2.0)}
-            val radius = 1.0 / curvature
-            var leftSpeed: Double
-            var rightSpeed: Double
-            val D = 1.0
-            if (radius > 0) {
-                leftSpeed = speed
-                rightSpeed = leftSpeed * radiusRatio(radius, D)
-            }
-            else {
-                rightSpeed = speed
-                leftSpeed = rightSpeed * radiusRatio(-radius, D)
-            }
-            val w: Double = (rightSpeed - leftSpeed) / D
-            heading = Vector2D.fromAngle(heading.angle() + w * dt)
+            val pose = Pose(position.x, position.y, heading.angle())
+            heading = controller.vectorControl(pose, time)
+            position += heading.scalarMul(dt)
         }
-
-        position += heading.scalarMul(speed * dt)
 
 
         try {
@@ -86,7 +95,7 @@ fun main(args: Array<String>) {
     }
     println("$time")
 
-    val chart = QuickChart.getChart("Path", "X", "Y", "Path", xPath, yPath)
+    val chart = QuickChart.getChart("paths.Path", "X", "Y", "paths.Path", xPath, yPath)
     val robotSeries = chart.addSeries("Robot Position",  xRobot, yRobot)
     robotSeries.marker = None()
     robotSeries.lineColor = Color.ORANGE

@@ -1,7 +1,6 @@
 package paths
 
 import Biarc
-import Path
 import Pose
 import Vector2D
 import toHeading
