@@ -1,7 +1,6 @@
-import controllers.GVFController
-import controllers.PurePursuitController
-import controllers.TimeVariantGVFController
 import controllers.TimeVariantPurePursuitController
+import math.Pose
+import math.Vector2D
 import motionprofile.MotionProfile
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
@@ -15,7 +14,7 @@ fun main(args: Array<String>) {
 
     val path = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
-            Pose(20.0, 0.0, -PI/4)))
+            Pose(20.0, 0.0, -PI / 4)))
     println(path.length)
     //val controller = TimeVariantGVFController(path, 10.0, 0.4, MotionProfile.Limits(6.0, 3.0, 0.0))
     val controller = TimeVariantPurePursuitController(path, 3.0, MotionProfile.Limits(6.0, 3.0, 0.0))

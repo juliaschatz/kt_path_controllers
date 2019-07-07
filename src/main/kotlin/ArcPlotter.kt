@@ -1,3 +1,5 @@
+import math.Biarc
+import math.Vector2D
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
 

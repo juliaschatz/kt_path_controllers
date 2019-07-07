@@ -1,9 +1,9 @@
 package controllers
 
-import Vector2D
+import math.Vector2D
 import paths.Path
-import Pose
-import SkidSteerCommand
+import math.Pose
+import math.SkidSteerCommand
 
 abstract class TimeVariantPathController(val path: Path) {
     abstract fun curvatureControl(pose: Pose, time: Double): SkidSteerCommand

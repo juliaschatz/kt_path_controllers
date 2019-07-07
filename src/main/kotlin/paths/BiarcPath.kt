@@ -1,9 +1,9 @@
 package paths
 
-import Biarc
-import Pose
-import Vector2D
-import toHeading
+import math.Biarc
+import math.Pose
+import math.Vector2D
+import math.toHeading
 import java.lang.IllegalArgumentException
 import kotlin.math.*
 

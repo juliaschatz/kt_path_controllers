@@ -1,8 +1,8 @@
 package controllers
 
-import Vector2D
+import math.Vector2D
 import paths.Path
-import Pose
+import math.Pose
 import kotlin.math.pow
 
 class PurePursuitController(path: Path, val lookaheadBase: Double): PathController(path) {

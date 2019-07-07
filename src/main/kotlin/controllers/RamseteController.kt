@@ -2,12 +2,10 @@ package controllers
 
 import motionprofile.MotionProfile
 import paths.Path
-import Pose
-import Vector2D
-import Twist2D
-import SkidSteerCommand
+import math.Pose
+import math.Twist2D
 import motionprofile.TrapezoidalMotionProfile
-import toHeading
+import math.toHeading
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt

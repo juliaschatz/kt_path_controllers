@@ -1,9 +1,8 @@
+import math.Pose
+import math.Vector2D
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.style.markers.None
 import paths.SplinePath
-import java.awt.Color
-import kotlin.math.PI
 
 fun main(args: Array<String>) {
     val arc = SplinePath(arrayOf(

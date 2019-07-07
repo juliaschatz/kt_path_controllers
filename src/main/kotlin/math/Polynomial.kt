@@ -1,3 +1,5 @@
+package math
+
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 

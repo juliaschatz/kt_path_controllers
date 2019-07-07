@@ -1,12 +1,12 @@
 package paths
 
-import Biarc
-import Polynomial
-import Pose
-import Vector2D
-import invLerp
-import lerp
-import minimize
+import math.Biarc
+import math.Polynomial
+import math.Pose
+import math.Vector2D
+import math.invLerp
+import math.lerp
+import math.minimize
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.linear.LUDecomposition
@@ -99,11 +99,11 @@ class SplinePath(val waypoints: Array<Pose>): Path() {
                 val tOffset = 0.25
                 val mid1Pt = biarc.first.r(tOffset)
                 val mid1Tan = biarc.first.tangentVec(tOffset)
-                val mid1Pose = Pose(mid1Pt.x, mid1Pt.y, mid1Tan.angle())
+                val mid1Pose = math.Pose(mid1Pt.x, mid1Pt.y, mid1Tan.angle())
 
                 val mid2Pt = biarc.second.r(1 - tOffset)
                 val mid2Tan = biarc.second.tangentVec(1 - tOffset)
-                val mid2Pose = Pose(mid2Pt.x, mid2Pt.y, mid2Tan.angle())
+                val mid2Pose = math.Pose(mid2Pt.x, mid2Pt.y, mid2Tan.angle())
 
                 return divide(p1, mid1Pose) + divide(mid1Pose, mid2Pose) + divide(mid2Pose, p2)
             }*/

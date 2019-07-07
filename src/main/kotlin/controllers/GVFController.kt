@@ -1,11 +1,11 @@
 package controllers
 
-import MATRIX_E
-import MATRIX_I2
+import math.MATRIX_E
+import math.MATRIX_I2
 import paths.Path
-import Vector2D
-import toHeading
-import Pose
+import math.Vector2D
+import math.toHeading
+import math.Pose
 import kotlin.math.pow
 
 class GVFController(path: Path, val k_delta: Double, val k_n: Double): PathController(path) {

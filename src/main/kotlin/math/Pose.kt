@@ -1,3 +1,5 @@
+package math
+
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -28,7 +30,7 @@ class Pose(override val x: Double, override val y: Double, val heading: Double):
     }
 
     override fun toString(): String {
-        return "Pose($x, $y, $heading)"
+        return "math.Pose($x, $y, $heading)"
     }
 
 }

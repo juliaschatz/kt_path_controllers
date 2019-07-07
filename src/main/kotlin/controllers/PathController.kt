@@ -1,8 +1,8 @@
 package controllers
 
-import Vector2D
+import math.Vector2D
 import paths.Path
-import Pose
+import math.Pose
 
 abstract class PathController(val path: Path) {
     abstract fun curvatureControl(pose: Pose, speed: Double, dt: Double): Double

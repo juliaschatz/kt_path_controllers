@@ -1,4 +1,6 @@
 import controllers.*
+import math.Pose
+import math.Vector2D
 import motionprofile.MotionProfile
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
@@ -11,8 +13,8 @@ fun main(args: Array<String>) {
 
     val path = SplinePath(arrayOf(
             Pose(0.0, 0.0, 0.0),
-            Pose(5.0, 5.0, PI/2),
-            Pose(0.0, 10.0, PI)))
+            Pose(5.0, 5.0, PI / 2),
+            Pose(10.0, 10.0, 0.0)))
     println(path.length)
     val controller = RamseteController(path, 2.0, 0.7, MotionProfile.Limits(6.0, 3.0, 0.0))
     val dt = 10.0 / 1000.0
@@ -23,7 +25,7 @@ fun main(args: Array<String>) {
     val errs = ArrayList<Double>()
 
     var time = 0.0
-    var position = Vector2D(0.00, -1.0)
+    var position = Vector2D(2.00, -1.0)
     var heading = Vector2D.fromAngle(0.0 * PI / 2)
 
     while (true) {

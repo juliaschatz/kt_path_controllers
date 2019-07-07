@@ -1,6 +1,6 @@
 package paths
 
-import Vector2D
+import math.Vector2D
 import org.apache.commons.math3.linear.Array2DRowRealMatrix
 import org.apache.commons.math3.linear.RealMatrix
 import kotlin.math.*

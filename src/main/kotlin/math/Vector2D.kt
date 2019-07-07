@@ -1,3 +1,5 @@
+package math
+
 import org.apache.commons.math3.linear.*
 import kotlin.math.*
 
@@ -76,7 +78,7 @@ open class Vector2D(open val x: Double, open val y: Double) {
     }
 
     override fun toString(): String {
-        return "Vector2D($x, $y)"
+        return "math.Vector2D($x, $y)"
     }
 
     fun sqDist(other: Vector2D): Double {

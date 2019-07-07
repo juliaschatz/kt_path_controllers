@@ -3,10 +3,9 @@ package controllers
 import motionprofile.MotionProfile
 import motionprofile.TrapezoidalMotionProfile
 import paths.Path
-import kotlin.math.pow
-import Pose
-import SkidSteerCommand
-import Vector2D
+import math.Pose
+import math.SkidSteerCommand
+import math.Vector2D
 import kotlin.math.min
 
 class TimeVariantPurePursuitController(path: Path, val lookahead: Double, val limits: MotionProfile.Limits): TimeVariantPathController(path) {
