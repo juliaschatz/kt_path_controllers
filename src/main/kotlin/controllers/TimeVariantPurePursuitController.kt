@@ -12,7 +12,6 @@ import kotlin.math.min
 class TimeVariantPurePursuitController(path: Path, val lookahead: Double, val limits: MotionProfile.Limits): TimeVariantPathController(path) {
     val motionProfile = TrapezoidalMotionProfile(path.length(), limits);
     override fun curvatureControl(pose: Pose, time: Double): SkidSteerCommand {
-        val t = motionProfile.getPosition(time) / path.length()
         val speed = motionProfile.getSpeed(time)
 
         val t_ahead = min(1.0, (motionProfile.getPosition(time) + lookahead) / path.length())
@@ -21,7 +20,6 @@ class TimeVariantPurePursuitController(path: Path, val lookahead: Double, val li
         return SkidSteerCommand(speed, curvature)
     }
     override fun vectorControl(pose: Pose, time: Double): Vector2D {
-        val t = motionProfile.getPosition(time) / path.length()
         val speed = motionProfile.getSpeed(time)
 
         val t_ahead = min(1.0, (motionProfile.getPosition(time) + lookahead) / path.length())
