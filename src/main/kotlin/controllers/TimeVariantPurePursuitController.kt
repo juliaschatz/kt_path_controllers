@@ -10,7 +10,7 @@ import Vector2D
 import kotlin.math.min
 
 class TimeVariantPurePursuitController(path: Path, val lookahead: Double, val limits: MotionProfile.Limits): TimeVariantPathController(path) {
-    val motionProfile = TrapezoidalMotionProfile(path.length(), limits);
+    val motionProfile = TrapezoidalMotionProfile(path.length(), limits)
     override fun curvatureControl(pose: Pose, time: Double): SkidSteerCommand {
         val speed = motionProfile.getSpeed(time)
 
