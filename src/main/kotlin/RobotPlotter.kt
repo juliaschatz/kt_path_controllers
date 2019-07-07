@@ -1,6 +1,7 @@
 import controllers.GVFController
 import controllers.PurePursuitController
 import controllers.TimeVariantGVFController
+import controllers.TimeVariantPurePursuitController
 import motionprofile.MotionProfile
 import org.knowm.xchart.QuickChart
 import org.knowm.xchart.SwingWrapper
@@ -16,8 +17,8 @@ fun main(args: Array<String>) {
             Pose(0.0, 0.0, 0.0),
             Pose(20.0, 0.0, -PI/4)))
     println(path.length)
-    val controller = TimeVariantGVFController(path, 10.0, .4,
-                                              MotionProfile.Limits(3.0, 3.0, 0.0))
+    //val controller = TimeVariantGVFController(path, 10.0, 0.4, MotionProfile.Limits(6.0, 3.0, 0.0))
+    val controller = TimeVariantPurePursuitController(path, 3.0, MotionProfile.Limits(6.0, 3.0, 0.0))
     val dt = 10.0 / 1000.0
 
     val xRobot = ArrayList<Double>()
@@ -26,7 +27,7 @@ fun main(args: Array<String>) {
     val errs = ArrayList<Double>()
 
     var time = 0.0
-    var position = Vector2D(0.00, -1.0)
+    var position = Vector2D(0.00, -0.0)
     var heading = Vector2D.fromAngle(0.0 * PI / 2)
 
     while (true) {
